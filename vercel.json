@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "{dist/**,node_modules/ffmpeg-static/ffmpeg}"
+      "includeFiles": "{dist/**,node_modules/ffmpeg-static/ffmpeg}",
+      "maxDuration": 300
     }
   },
   "rewrites": [
