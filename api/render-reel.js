@@ -71,6 +71,25 @@ export default async function handler(req, res) {
     const sBox = template.coordinates.subtitle_box !== 'hidden' ? parseCoords(template.coordinates.subtitle_box) : null;
     const tBox = template.coordinates.ticker_box !== 'hidden' ? parseCoords(template.coordinates.ticker_box) : null;
 
+    // Helper for approximate word wrap based on pixel width
+    const wrapText = (text, maxWidth, fontSize) => {
+      const charWidth = fontSize * 0.55; 
+      const maxChars = Math.max(10, Math.floor(maxWidth / charWidth));
+      const words = String(text).split(' ');
+      let lines = [];
+      let currentLine = '';
+      for (const word of words) {
+        if ((currentLine.length + word.length + 1) > maxChars && currentLine.length > 0) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine += (currentLine ? ' ' : '') + word;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      return lines.join('\n');
+    };
+
     const filterGraph = [
       {
         filter: 'scale',
@@ -108,16 +127,18 @@ export default async function handler(req, res) {
     }
 
     if (scriptData.headline && hBox) {
+      const fontSize = Math.round((Number(styleOverrides.headlineSize) || 50) * scaleFactor);
       const headlinePath = path.join(tempDir, 'headline.txt');
-      fs.writeFileSync(headlinePath, String(scriptData.headline));
+      const wrappedHeadline = wrapText(scriptData.headline, hBox[2], fontSize);
+      fs.writeFileSync(headlinePath, wrappedHeadline);
       filterGraph.push({
         filter: 'drawtext',
         options: {
           fontfile: fontPath,
           fontcolor: styleOverrides.headlineColor || 'white',
-          fontsize: Math.round((Number(styleOverrides.headlineSize) || 50) * scaleFactor).toString(),
-          x: hBox[0],
-          y: hBox[1],
+          fontsize: fontSize.toString(),
+          x: `${hBox[0]}+(${hBox[2]}-text_w)/2`,
+          y: `${hBox[1]}+(${hBox[3]}-text_h)/2`,
           textfile: headlinePath,
           box: '1',
           boxcolor: 'black@0.5',
@@ -130,16 +151,18 @@ export default async function handler(req, res) {
     }
 
     if (scriptData.ticker && tBox) {
+      const fontSize = Math.round((Number(styleOverrides.tickerSize) || 40) * scaleFactor);
       const tickerPath = path.join(tempDir, 'ticker.txt');
       fs.writeFileSync(tickerPath, String(scriptData.ticker));
+      const speed = Math.round((template.style_rules.ticker_speed || 150) * scaleFactor);
       filterGraph.push({
         filter: 'drawtext',
         options: {
           fontfile: fontPath,
           fontcolor: styleOverrides.tickerColor || 'white',
-          fontsize: Math.round((Number(styleOverrides.tickerSize) || 40) * scaleFactor).toString(),
-          x: `mod(max(t*${Math.round((template.style_rules.ticker_speed || 80) * scaleFactor)}\\, ${targetW})\\-${targetW}\\, ${Math.round(2000 * scaleFactor)})`, 
-          y: tBox[1],
+          fontsize: fontSize.toString(),
+          x: `${tBox[0]}+${tBox[2]}-(t*${speed})`, 
+          y: `${tBox[1]}+(${tBox[3]}-text_h)/2`,
           textfile: tickerPath,
           box: '1',
           boxcolor: styleOverrides.tickerBg || 'red@0.8',
@@ -152,13 +175,15 @@ export default async function handler(req, res) {
     }
 
     if (scriptData.subtitles && sBox) {
+      const fontSize = Math.round((Number(styleOverrides.subtitleSize) || 45) * scaleFactor);
       const subtitleLines = Array.isArray(scriptData.subtitles) ? scriptData.subtitles : [scriptData.subtitles].filter(Boolean);
       const timePerSubtitle = 3.5; // Estimated 3.5s per line
 
       subtitleLines.forEach((sub, index) => {
         const nextOutput = `sub_${index}`;
         const subPath = path.join(tempDir, `sub_${index}.txt`);
-        fs.writeFileSync(subPath, String(sub));
+        const wrappedSub = wrapText(sub, sBox[2], fontSize);
+        fs.writeFileSync(subPath, wrappedSub);
         const startT = index * timePerSubtitle;
         const endT = (index + 1) * timePerSubtitle;
 
@@ -167,9 +192,9 @@ export default async function handler(req, res) {
           options: {
             fontfile: fontPath,
             fontcolor: styleOverrides.subtitleColor || 'yellow',
-            fontsize: Math.round((Number(styleOverrides.subtitleSize) || 45) * scaleFactor).toString(),
-            x: sBox[0],
-            y: sBox[1],
+            fontsize: fontSize.toString(),
+            x: `${sBox[0]}+(${sBox[2]}-text_w)/2`,
+            y: `${sBox[1]}+(${sBox[3]}-text_h)/2`,
             textfile: subPath,
             box: '1',
             boxcolor: 'black@0.6',
@@ -207,6 +232,7 @@ export default async function handler(req, res) {
           '-preset ultrafast',
           '-crf 32', // Reduced quality for faster processing
           '-pix_fmt yuv420p',
+          '-r', '24', // Reduce frame rate to speed up rendering
           '-t', durationLimit.toString(),
           '-threads', '2' // Prevent resource exhaustion in Vercel limits
       ];
