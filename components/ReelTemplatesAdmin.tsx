@@ -596,11 +596,13 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template: initialTempla
                       return { ...prev, coordinates: newCoords };
                     });
                   }}
-                  className={`flex items-center gap-1 font-mono hover:bg-gray-200 px-2 py-1 rounded transition-colors ${isHidden ? 'text-gray-400 opacity-50' : 'text-gray-800'}`}
+                  className={`flex items-center gap-2 font-mono hover:bg-gray-200 px-3 py-1.5 rounded transition-colors border ${isHidden ? 'border-gray-200 text-gray-500 bg-gray-50' : 'border-gray-300 text-gray-800 bg-white shadow-sm'}`}
                 >
-                  <div className="w-3 h-3 rounded border border-gray-300" style={{ backgroundColor: isHidden ? 'transparent' : boxColors[boxName] }}></div>
-                  {boxName.replace('_box', '')}
-                  {isHidden ? ' ⌀' : ''}
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: isHidden ? '#cbd5e1' : boxColors[boxName] }}></div>
+                  <span className="capitalize">{boxName.replace('_box', '')}</span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isHidden ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    {isHidden ? 'Removed' : 'Added'}
+                  </span>
                 </button>
               );
             })}

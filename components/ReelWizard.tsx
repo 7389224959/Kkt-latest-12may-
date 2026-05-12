@@ -51,6 +51,9 @@ export default function ReelWizard({ articles, settings, onClose }: { articles: 
         subtitle: first.coordinates?.subtitle_box || '',
         video: first.coordinates?.video_box || ''
       });
+      setShowHeadline(first.coordinates?.headline_box && first.coordinates?.headline_box !== 'hidden');
+      setShowTicker(first.coordinates?.ticker_box && first.coordinates?.ticker_box !== 'hidden');
+      setShowSubtitles(first.coordinates?.subtitle_box && first.coordinates?.subtitle_box !== 'hidden');
     }
   }, [activeTemplates, selectedTemplateId]);
 
@@ -64,6 +67,9 @@ export default function ReelWizard({ articles, settings, onClose }: { articles: 
         subtitle: t.coordinates?.subtitle_box || '',
         video: t.coordinates?.video_box || ''
       });
+      setShowHeadline(t.coordinates?.headline_box && t.coordinates?.headline_box !== 'hidden');
+      setShowTicker(t.coordinates?.ticker_box && t.coordinates?.ticker_box !== 'hidden');
+      setShowSubtitles(t.coordinates?.subtitle_box && t.coordinates?.subtitle_box !== 'hidden');
     }
   };
 
@@ -272,13 +278,13 @@ export default function ReelWizard({ articles, settings, onClose }: { articles: 
           </div>
 
           <div className="bg-gray-50 p-4 rounded border">
-            <h4 className="font-medium mb-2">Element Visibility</h4>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={showHeadline} onChange={(e)=>setShowHeadline(e.target.checked)} /> Headline</label>
-              <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={showTicker} onChange={(e)=>setShowTicker(e.target.checked)} /> Ticker</label>
-              <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={showSubtitles} onChange={(e)=>setShowSubtitles(e.target.checked)} /> Subtitles</label>
+            <h4 className="font-medium mb-2">Template Elements</h4>
+            <div className="flex gap-4 text-sm text-gray-700">
+              <span className={showHeadline ? 'text-green-600 font-bold' : 'text-gray-400 line-through'}>Headline</span>
+              <span className={showTicker ? 'text-green-600 font-bold' : 'text-gray-400 line-through'}>Ticker</span>
+              <span className={showSubtitles ? 'text-green-600 font-bold' : 'text-gray-400 line-through'}>Subtitles</span>
             </div>
-            <p className="text-xs text-gray-500 mt-2">AI will only generate text for visible elements.</p>
+            <p className="text-xs text-gray-500 mt-2">Visibility is configured in the template settings by the admin.</p>
           </div>
 
           <button onClick={handleGenerateScript} disabled={isGenerating} className="btn-primary w-full py-3 flex gap-2 items-center justify-center bg-gray-900 text-white rounded">
@@ -432,31 +438,6 @@ export default function ReelWizard({ articles, settings, onClose }: { articles: 
                     )}
                  </div>
               )}
-           </div>
-
-           <div className="bg-gray-50 p-4 rounded border mt-4">
-              <h4 className="font-medium mb-2">Adjust Element Positions (optional)</h4>
-              <p className="text-xs text-gray-500 mb-2">Format: x,y or expressions like (w-tw)/2,h-th</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                {showHeadline && (
-                   <div>
-                      <label className="text-xs font-bold">Headline Coords</label>
-                      <input type="text" value={customCoords.headline} onChange={e => setCustomCoords({...customCoords, headline: e.target.value})} className="w-full p-1 border rounded text-sm" />
-                   </div>
-                )}
-                {showTicker && (
-                   <div>
-                      <label className="text-xs font-bold">Ticker Coords</label>
-                      <input type="text" value={customCoords.ticker} onChange={e => setCustomCoords({...customCoords, ticker: e.target.value})} className="w-full p-1 border rounded text-sm" />
-                   </div>
-                )}
-                {showSubtitles && (
-                   <div>
-                      <label className="text-xs font-bold">Subtitle Coords</label>
-                      <input type="text" value={customCoords.subtitle} onChange={e => setCustomCoords({...customCoords, subtitle: e.target.value})} className="w-full p-1 border rounded text-sm" />
-                   </div>
-                )}
-              </div>
            </div>
 
            <div className="flex gap-4 pt-4">
