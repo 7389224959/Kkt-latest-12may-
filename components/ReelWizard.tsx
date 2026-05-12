@@ -642,14 +642,17 @@ function ReelEditorView({
                   style={{
                     left: headlineBox.x * scale, top: headlineBox.y * scale, 
                     width: headlineBox.w * scale, height: headlineBox.h * scale,
-                    backgroundColor: 'rgba(0,0,0,0.5)'
                   }}
                   onMouseDown={(e) => handleDragStart(e, 'headline_box', 'move')}
                   onTouchStart={(e) => handleDragStart(e, 'headline_box', 'move')}
                 >
                    <span className="text-center font-bold pointer-events-none" style={{
                       color: styleOverrides.headlineColor || 'white', 
-                      fontSize: `${(parseInt(styleOverrides.headlineSize || '50') * scale)}px`
+                      fontSize: `${(parseInt(styleOverrides.headlineSize || '80') * scale)}px`,
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-block'
                    }}>{scriptData.headline}</span>
                    <div 
                      className="absolute bottom-0 right-0 w-8 h-8 -mr-4 -mb-4 bg-transparent cursor-nwse-resize flex items-center justify-center pointer-events-auto"
@@ -663,7 +666,7 @@ function ReelEditorView({
 
              {showTicker && !tickerBox.hidden && (
                 <div 
-                  className="absolute flex items-center text-white px-2 cursor-grab active:cursor-grabbing border-2 border-dashed border-yellow-400 hover:border-yellow-500 whitespace-nowrap overflow-visible"
+                  className="absolute flex items-center px-2 cursor-grab active:cursor-grabbing border-2 border-dashed border-yellow-400 hover:border-yellow-500 whitespace-nowrap overflow-visible"
                   style={{
                     left: tickerBox.x * scale, top: tickerBox.y * scale, 
                     width: tickerBox.w * scale, height: tickerBox.h * scale,
@@ -673,9 +676,9 @@ function ReelEditorView({
                   onTouchStart={(e) => handleDragStart(e, 'ticker_box', 'move')}
                 >
                    <div className="w-full h-full overflow-hidden flex items-center pointer-events-none">
-                     <span className="font-bold" style={{
+                     <span className="font-bold drop-shadow-md" style={{
                         color: styleOverrides.tickerColor || 'white', 
-                        fontSize: `${(parseInt(styleOverrides.tickerSize || '40') * scale)}px`
+                        fontSize: `${(parseInt(styleOverrides.tickerSize || '50') * scale)}px`
                      }}>{scriptData.ticker}</span>
                    </div>
                    <div 
@@ -694,14 +697,17 @@ function ReelEditorView({
                   style={{
                     left: subtitleBox.x * scale, top: subtitleBox.y * scale, 
                     width: subtitleBox.w * scale, height: subtitleBox.h * scale,
-                    backgroundColor: 'rgba(0,0,0,0.6)'
                   }}
                   onMouseDown={(e) => handleDragStart(e, 'subtitle_box', 'move')}
                   onTouchStart={(e) => handleDragStart(e, 'subtitle_box', 'move')}
                 >
                    <span className="text-center font-bold pointer-events-none" style={{
                       color: styleOverrides.subtitleColor || 'yellow', 
-                      fontSize: `${(parseInt(styleOverrides.subtitleSize || '45') * scale)}px`
+                      fontSize: `${(parseInt(styleOverrides.subtitleSize || '60') * scale)}px`,
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-block'
                    }}>{scriptData.subtitles?.[0] || 'Subtitle prev...'}</span>
                    <div 
                      className="absolute bottom-0 right-0 w-8 h-8 -mr-4 -mb-4 bg-transparent cursor-nwse-resize flex items-center justify-center pointer-events-auto"

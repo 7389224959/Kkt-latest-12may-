@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       await downloadFile(audioUrl, audioPath);
     }
     await downloadFile(templateMediaUrl, backgroundPath);
-    await downloadFile('https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf', fontPath);
+    await downloadFile('https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Bold.ttf', fontPath);
 
     const targetW = 720;
     const targetH = 1280;
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
 
     // Helper for approximate word wrap based on pixel width
     const wrapText = (text, maxWidth, fontSize) => {
-      const charWidth = fontSize * 0.55; 
+      const charWidth = fontSize * 0.45; // Adjusted for bold font
       const maxChars = Math.max(10, Math.floor(maxWidth / charWidth));
       const words = String(text).split(' ');
       let lines = [];
@@ -93,13 +93,19 @@ export default async function handler(req, res) {
     const filterGraph = [
       {
         filter: 'scale',
-        options: `${targetW}:${targetH}`,
+        options: `${targetW}:${targetH}:force_original_aspect_ratio=increase`,
         inputs: '0:v',
         outputs: 'bg_scaled'
+      },
+      {
+        filter: 'crop',
+        options: `${targetW}:${targetH}`,
+        inputs: 'bg_scaled',
+        outputs: 'bg_cropped'
       }
     ];
 
-    let currentOutput = 'bg_scaled';
+    let currentOutput = 'bg_cropped';
     let nextInputIndex = 1;
 
     let overlayIndex = -1;
@@ -127,7 +133,7 @@ export default async function handler(req, res) {
     }
 
     if (scriptData.headline && hBox) {
-      const fontSize = Math.round((Number(styleOverrides.headlineSize) || 50) * scaleFactor);
+      const fontSize = Math.round((Number(styleOverrides.headlineSize) || 80) * scaleFactor);
       const headlinePath = path.join(tempDir, 'headline.txt');
       const wrappedHeadline = wrapText(scriptData.headline, hBox[2], fontSize);
       fs.writeFileSync(headlinePath, wrappedHeadline);
@@ -151,10 +157,27 @@ export default async function handler(req, res) {
     }
 
     if (scriptData.ticker && tBox) {
-      const fontSize = Math.round((Number(styleOverrides.tickerSize) || 40) * scaleFactor);
+      const fontSize = Math.round((Number(styleOverrides.tickerSize) || 50) * scaleFactor);
       const tickerPath = path.join(tempDir, 'ticker.txt');
       fs.writeFileSync(tickerPath, String(scriptData.ticker));
       const speed = Math.round((template.style_rules.ticker_speed || 150) * scaleFactor);
+      
+      // Draw static background box for ticker
+      filterGraph.push({
+        filter: 'drawbox',
+        options: {
+          x: tBox[0],
+          y: tBox[1],
+          w: tBox[2],
+          h: tBox[3],
+          color: styleOverrides.tickerBg || 'red@0.8',
+          t: 'fill'
+        },
+        inputs: currentOutput,
+        outputs: 'with_ticker_bg'
+      });
+
+      // Draw moving text over the background
       filterGraph.push({
         filter: 'drawtext',
         options: {
@@ -164,18 +187,18 @@ export default async function handler(req, res) {
           x: `${tBox[0]}+${tBox[2]}-(t*${speed})`, 
           y: `${tBox[1]}+(${tBox[3]}-text_h)/2`,
           textfile: tickerPath,
-          box: '1',
-          boxcolor: styleOverrides.tickerBg || 'red@0.8',
-          boxborderw: Math.round(10 * scaleFactor).toString()
+          shadowcolor: 'black@0.5',
+          shadowx: '2',
+          shadowy: '2'
         },
-        inputs: currentOutput,
+        inputs: 'with_ticker_bg',
         outputs: 'with_ticker'
       });
       currentOutput = 'with_ticker';
     }
 
     if (scriptData.subtitles && sBox) {
-      const fontSize = Math.round((Number(styleOverrides.subtitleSize) || 45) * scaleFactor);
+      const fontSize = Math.round((Number(styleOverrides.subtitleSize) || 60) * scaleFactor);
       const subtitleLines = Array.isArray(scriptData.subtitles) ? scriptData.subtitles : [scriptData.subtitles].filter(Boolean);
       const timePerSubtitle = 3.5; // Estimated 3.5s per line
 
